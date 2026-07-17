@@ -1,0 +1,1058 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<title>growth. — dashboard mahasiswa muslim</title>
+<script src="https://cdn.tailwindcss.com"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.4/chart.umd.min.js"></script>
+<script>
+  tailwind.config = {
+    theme: {
+      extend: {
+        colors: {
+          cream: '#FDFBF7',
+          sage: '#D3E4CD',
+          sageLight: '#EDF3EA',
+          sageDeep: '#8FA888',
+          blush: '#E8C5C8',
+          blushLight: '#FAF1F1',
+          blushDeep: '#C98A8F',
+          gold: '#F6E7C9',
+          goldLight: '#FBF3E0',
+          goldDeep: '#C9A15A',
+          charcoal: '#3D3A3A',
+          charcoalSoft: '#726D6D'
+        },
+        fontFamily: {
+          heading: ['Poppins', 'sans-serif'],
+          body: ['Inter', 'sans-serif'],
+          mono: ['IBM Plex Mono', 'monospace']
+        },
+        boxShadow: {
+          soft: '0 2px 14px rgba(61,58,58,0.06)'
+        }
+      }
+    }
+  }
+</script>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@500;600;700&family=Inter:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  body{ font-family:'Inter', sans-serif; }
+  .font-heading{ font-family:'Poppins', sans-serif; }
+  .mono{ font-family:'IBM Plex Mono', monospace; }
+  ::-webkit-scrollbar{ width:6px; height:6px; }
+  ::-webkit-scrollbar-thumb{ background:rgba(61,58,58,0.15); border-radius:8px; }
+  .fade{ animation: fadeIn .25s ease; }
+  @keyframes fadeIn{ from{ opacity:0; transform:translateY(4px);} to{ opacity:1; transform:none; } }
+  .note-a{ transform: rotate(-1.5deg); }
+  .note-b{ transform: rotate(1.5deg); }
+  .note-c{ transform: rotate(-0.5deg); }
+  .safe-bottom{ padding-bottom: calc(env(safe-area-inset-bottom) + 10px); }
+  input[type="checkbox"]{ accent-color: #C98A8F; }
+</style>
+</head>
+<body class="bg-cream text-charcoal min-h-screen pb-28 sm:pb-10">
+
+<div class="max-w-2xl mx-auto px-4 sm:px-6 pt-5">
+
+  <!-- TOP BAR -->
+  <div class="flex items-center justify-between mb-4">
+    <div>
+      <p class="font-heading font-semibold text-lg sm:text-xl text-charcoal">growth. <span>✨</span></p>
+      <p class="text-xs sm:text-sm text-charcoalSoft" id="todayDate">—</p>
+    </div>
+    <button id="resetDailyBtn" class="flex items-center gap-1 text-xs font-medium px-3 py-2.5 min-h-[44px] rounded-full bg-white shadow-soft text-charcoalSoft hover:text-charcoal active:scale-95 transition">
+      🔄 <span class="hidden sm:inline">Reset hari baru</span>
+    </button>
+  </div>
+
+  <!-- DESKTOP TABS -->
+  <div class="hidden sm:flex gap-2 mb-5 bg-white rounded-full p-1.5 shadow-soft w-fit">
+    <button data-tab="dashboard" class="tab-btn px-4 py-2 rounded-full text-sm font-medium transition">✨ Dashboard</button>
+    <button data-tab="spiritual" class="tab-btn px-4 py-2 rounded-full text-sm font-medium transition">🕊️ Spiritual</button>
+    <button data-tab="academic" class="tab-btn px-4 py-2 rounded-full text-sm font-medium transition">🎀 Academic</button>
+    <button data-tab="finance" class="tab-btn px-4 py-2 rounded-full text-sm font-medium transition">💸 Finance</button>
+    <button data-tab="tracker" class="tab-btn px-4 py-2 rounded-full text-sm font-medium transition">📊 Tracker</button>
+  </div>
+
+  <!-- ================= DASHBOARD TAB ================= -->
+  <div id="tab-dashboard" class="tab-panel space-y-4 fade">
+
+    <div class="rounded-3xl bg-sageLight px-5 py-4 shadow-soft flex items-center justify-between gap-3">
+      <p class="text-sm sm:text-[15px] text-charcoal italic leading-relaxed" id="quoteText">—</p>
+      <button id="quoteRefresh" class="shrink-0 w-11 h-11 flex items-center justify-center rounded-full bg-white shadow-soft active:scale-95">✨</button>
+    </div>
+
+    <div class="rounded-3xl bg-white shadow-soft p-5">
+      <p class="text-xs font-medium text-sageDeep mb-1">🕊️ Menuju sholat berikutnya</p>
+      <div class="flex items-end justify-between">
+        <p class="font-heading text-2xl font-semibold" id="nextPrayerLabel">—</p>
+        <p class="mono text-2xl text-sageDeep" id="nextPrayerCountdown">--:--:--</p>
+      </div>
+    </div>
+
+    <div class="rounded-3xl bg-blushLight shadow-soft p-5 text-center">
+      <p class="text-xs font-medium text-blushDeep mb-1" id="pomodoroMode">📖 Fokus</p>
+      <p class="font-heading text-4xl font-semibold text-charcoal mb-4" id="pomodoroClock">25:00</p>
+      <div class="flex justify-center gap-2 mb-3">
+        <button id="pomodoroStart" class="min-h-[44px] px-5 rounded-full bg-blushDeep text-white text-sm font-medium active:scale-95">Mulai</button>
+        <button id="pomodoroPause" class="min-h-[44px] px-5 rounded-full bg-white text-blushDeep text-sm font-medium shadow-soft active:scale-95">Jeda</button>
+        <button id="pomodoroReset" class="min-h-[44px] px-5 rounded-full bg-white text-blushDeep text-sm font-medium shadow-soft active:scale-95">Ulang</button>
+      </div>
+      <p class="text-xs text-blushDeep mono">🎀 sesi fokus hari ini: <span id="pomodoroCount">0</span></p>
+    </div>
+
+    <div class="rounded-3xl bg-white shadow-soft p-5">
+      <p class="text-sm font-medium text-charcoal mb-3">🎀 Quick notes</p>
+      <div class="flex gap-2 mb-3">
+        <input id="noteInput" type="text" maxlength="80" placeholder="Tulis catatan kecil..." class="flex-1 min-h-[44px] text-sm rounded-2xl border-none bg-cream px-4 focus:outline-none focus:ring-2 focus:ring-sage">
+        <button id="noteAdd" class="min-h-[44px] w-[44px] rounded-2xl bg-sage text-charcoal font-medium active:scale-95">+</button>
+      </div>
+      <div class="flex flex-wrap gap-2" id="noteList"></div>
+    </div>
+
+  </div>
+
+  <!-- ================= SPIRITUAL TAB ================= -->
+  <div id="tab-spiritual" class="tab-panel space-y-4 fade hidden">
+
+    <div class="rounded-3xl bg-sageLight shadow-soft p-5 flex items-center justify-between">
+      <div>
+        <p class="text-xs font-medium text-sageDeep mb-1">🕊️ Ibadah harian</p>
+        <p class="font-heading text-base font-semibold text-charcoal">Yuk konsisten hari ini</p>
+      </div>
+      <div class="text-right">
+        <p class="text-[11px] text-sageDeep mono">streak</p>
+        <p class="font-heading text-2xl font-semibold text-sageDeep" id="ibadahStreak">0 hari</p>
+      </div>
+    </div>
+
+    <div id="puasaSunnahBanner" class="hidden rounded-3xl bg-gold shadow-soft p-4 items-center justify-between">
+      <p class="text-sm text-charcoal" id="puasaSunnahText">Hari ini puasa sunnah, yuk!</p>
+      <label class="flex items-center gap-2 shrink-0 min-h-[44px] px-2">
+        <input type="checkbox" id="puasaSunnahCheck" class="w-5 h-5 rounded">
+        <span class="text-xs font-medium text-charcoal">Sudah</span>
+      </label>
+    </div>
+
+    <div class="rounded-3xl bg-white shadow-soft p-5">
+      <div class="space-y-1" id="ibadahList"></div>
+    </div>
+
+    <div class="rounded-3xl bg-white shadow-soft p-5">
+      <p class="text-sm font-medium text-charcoal mb-3">📖 Lembar tilawah</p>
+      <div class="flex items-center gap-2 mb-3">
+        <input id="tilawahInput" type="number" min="1" placeholder="Halaman dibaca" class="flex-1 min-h-[44px] text-sm rounded-2xl bg-cream px-4 focus:outline-none focus:ring-2 focus:ring-sage">
+        <button id="tilawahAdd" class="min-h-[44px] px-4 rounded-2xl bg-sage text-charcoal text-sm font-medium active:scale-95">Catat</button>
+      </div>
+      <div class="flex justify-between text-xs text-charcoalSoft">
+        <span>Hari ini: <b class="text-charcoal" id="tilawahToday">0</b> halaman</span>
+        <span>Total: <b class="text-charcoal" id="tilawahTotal">0</b> halaman</span>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- ================= ACADEMIC TAB ================= -->
+  <div id="tab-academic" class="tab-panel space-y-4 fade hidden">
+
+    <div class="rounded-3xl bg-blushLight shadow-soft p-5">
+      <p class="text-xs font-medium text-blushDeep mb-2">🎯 Target IPK</p>
+      <div class="flex gap-2 mb-3">
+        <input id="currentIPK" type="number" step="0.01" min="0" max="4" placeholder="IPK saat ini" class="flex-1 min-h-[44px] text-sm rounded-2xl bg-white px-4 focus:outline-none focus:ring-2 focus:ring-blush">
+        <input id="targetIPK" type="number" step="0.01" min="0" max="4" placeholder="Target IPK" class="flex-1 min-h-[44px] text-sm rounded-2xl bg-white px-4 focus:outline-none focus:ring-2 focus:ring-blush">
+      </div>
+      <div class="w-full h-3 rounded-full bg-white overflow-hidden">
+        <div id="ipkBar" class="h-full bg-blushDeep rounded-full transition-all" style="width:0%"></div>
+      </div>
+      <p class="text-xs text-blushDeep mt-2" id="ipkNote">Isi IPK saat ini dan target untuk melihat progres.</p>
+    </div>
+
+    <div class="rounded-3xl bg-white shadow-soft p-5">
+      <div class="flex items-center justify-between mb-2">
+        <p class="text-sm font-medium text-charcoal">📚 Skill quest tracker</p>
+        <button id="addHourBtn" class="min-h-[44px] px-4 rounded-full bg-blush text-charcoal text-xs font-medium active:scale-95">+1 jam belajar</button>
+      </div>
+      <div class="flex justify-between text-xs text-charcoalSoft mb-1">
+        <span>Minggu ini</span>
+        <span class="mono"><span id="weekHours">0</span> / <span id="weekGoal">10</span> jam</span>
+      </div>
+      <div class="w-full h-3 rounded-full bg-cream overflow-hidden mb-2">
+        <div id="skillBar" class="h-full bg-blushDeep rounded-full transition-all" style="width:0%"></div>
+      </div>
+      <div class="flex items-center gap-2">
+        <label class="text-xs text-charcoalSoft">Target jam/minggu</label>
+        <input id="weekGoalInput" type="number" min="1" class="w-16 min-h-[36px] text-xs mono rounded-xl bg-cream px-2 text-center">
+      </div>
+    </div>
+
+    <div class="rounded-3xl bg-white shadow-soft p-5">
+      <p class="text-sm font-medium text-charcoal mb-3">🎀 Daftar tugas</p>
+      <div class="space-y-2 mb-3">
+        <input id="todoInput" type="text" placeholder="Nama tugas" class="w-full min-h-[44px] text-sm rounded-2xl bg-cream px-4 focus:outline-none focus:ring-2 focus:ring-blush">
+        <div class="flex gap-2">
+          <input id="todoDue" type="datetime-local" class="flex-1 min-h-[44px] text-sm rounded-2xl bg-cream px-3 focus:outline-none focus:ring-2 focus:ring-blush">
+          <button id="todoAdd" class="min-h-[44px] px-5 rounded-2xl bg-blushDeep text-white text-sm font-medium active:scale-95">Tambah</button>
+        </div>
+      </div>
+      <div class="space-y-2" id="todoList"></div>
+    </div>
+
+  </div>
+
+  <!-- ================= FINANCE TAB ================= -->
+  <div id="tab-finance" class="tab-panel space-y-4 fade hidden">
+
+    <div class="rounded-3xl bg-goldLight shadow-soft p-5">
+      <p class="text-xs font-medium text-goldDeep mb-2">💸 Saldo</p>
+      <p class="font-heading text-3xl font-semibold text-charcoal" id="balanceOut">Rp 0</p>
+      <div class="flex gap-4 mt-2 text-xs text-charcoalSoft">
+        <span>Masuk: <b class="text-charcoal" id="incomeOut">Rp 0</b></span>
+        <span>Keluar bln ini: <b class="text-charcoal" id="expenseOut">Rp 0</b></span>
+      </div>
+    </div>
+
+    <div class="rounded-3xl bg-white shadow-soft p-5">
+      <p class="text-sm font-medium text-charcoal mb-3">🎯 Savings goal</p>
+      <div class="flex gap-2 mb-3">
+        <input id="goalName" type="text" placeholder="Nama impian, misal: kamera" class="flex-1 min-h-[44px] text-sm rounded-2xl bg-cream px-4 focus:outline-none focus:ring-2 focus:ring-gold">
+        <input id="goalTarget" type="number" placeholder="Target Rp" class="w-32 min-h-[44px] text-sm rounded-2xl bg-cream px-3 mono focus:outline-none focus:ring-2 focus:ring-gold">
+      </div>
+      <div class="w-full h-3 rounded-full bg-cream overflow-hidden mb-2">
+        <div id="goalBar" class="h-full bg-goldDeep rounded-full transition-all" style="width:0%"></div>
+      </div>
+      <div class="flex items-center justify-between text-xs text-charcoalSoft mb-3">
+        <span id="goalLabel">Belum ada target</span>
+        <span class="mono" id="goalPercent">0%</span>
+      </div>
+      <div class="flex gap-2">
+        <input id="goalAddAmount" type="number" placeholder="Tambah tabungan" class="flex-1 min-h-[44px] text-sm rounded-2xl bg-cream px-4 mono focus:outline-none focus:ring-2 focus:ring-gold">
+        <button id="goalAddBtn" class="min-h-[44px] px-4 rounded-2xl bg-goldDeep text-white text-sm font-medium active:scale-95">Tabung</button>
+      </div>
+    </div>
+
+    <div class="rounded-3xl bg-white shadow-soft p-5">
+      <p class="text-sm font-medium text-charcoal mb-3">📋 Budget per kategori</p>
+      <div class="space-y-3" id="budgetList"></div>
+    </div>
+
+    <div class="rounded-3xl bg-white shadow-soft p-5">
+      <p class="text-sm font-medium text-charcoal mb-3">Catat transaksi</p>
+      <div class="space-y-2 mb-3">
+        <div class="flex gap-2">
+          <select id="txType" class="flex-1 min-h-[44px] text-sm rounded-2xl bg-cream px-3">
+            <option value="expense" selected>Pengeluaran</option>
+            <option value="income">Pemasukan</option>
+          </select>
+          <select id="txCategory" class="flex-1 min-h-[44px] text-sm rounded-2xl bg-cream px-3"></select>
+        </div>
+        <div class="flex gap-2">
+          <input id="txAmount" type="number" placeholder="Nominal" class="w-32 min-h-[44px] text-sm rounded-2xl bg-cream px-3 mono focus:outline-none focus:ring-2 focus:ring-gold">
+          <input id="txDesc" type="text" placeholder="Keterangan" class="flex-1 min-h-[44px] text-sm rounded-2xl bg-cream px-4 focus:outline-none focus:ring-2 focus:ring-gold">
+        </div>
+        <button id="txAdd" class="w-full min-h-[44px] rounded-2xl bg-goldDeep text-white text-sm font-medium active:scale-95">Catat transaksi</button>
+      </div>
+      <div class="space-y-1 max-h-60 overflow-y-auto" id="txList"></div>
+    </div>
+
+  </div>
+
+  <!-- ================= TRACKER TAB ================= -->
+  <div id="tab-tracker" class="tab-panel space-y-4 fade hidden">
+
+    <div class="rounded-3xl bg-white shadow-soft p-5">
+      <p class="text-sm font-medium text-charcoal mb-1">📈 Daily progress</p>
+      <p class="text-xs text-charcoalSoft mb-3">Rata-rata checklist ibadah & tugas yang selesai tiap hari.</p>
+      <div class="relative h-52">
+        <canvas id="progressChart"></canvas>
+      </div>
+    </div>
+
+    <div class="rounded-3xl bg-blushLight shadow-soft p-5">
+      <p class="text-sm font-medium text-charcoal mb-3">🌸 Period tracker</p>
+      <div class="space-y-2 mb-4">
+        <div>
+          <label class="text-xs text-charcoalSoft block mb-1">Hari pertama menstruasi terakhir</label>
+          <input id="periodLastDate" type="date" class="w-full min-h-[44px] text-sm rounded-2xl bg-white px-4 focus:outline-none focus:ring-2 focus:ring-blush">
+        </div>
+        <div>
+          <label class="text-xs text-charcoalSoft block mb-1">Rata-rata panjang siklus (hari)</label>
+          <input id="periodCycleLength" type="number" min="20" max="45" placeholder="28" class="w-full min-h-[44px] text-sm rounded-2xl bg-white px-4 mono focus:outline-none focus:ring-2 focus:ring-blush">
+        </div>
+      </div>
+
+      <div id="periodResults" class="hidden space-y-2">
+        <div class="rounded-2xl bg-white px-4 py-3 flex items-center justify-between">
+          <span class="text-xs text-charcoalSoft">📅 Prediksi periode berikutnya</span>
+          <span class="text-sm font-medium text-charcoal" id="periodNextDate">—</span>
+        </div>
+        <div class="rounded-2xl bg-white px-4 py-3 flex items-center justify-between">
+          <span class="text-xs text-charcoalSoft">⏳ Hitung mundur</span>
+          <span class="text-sm font-medium text-blushDeep" id="periodCountdown">—</span>
+        </div>
+        <div class="rounded-2xl bg-sageLight px-4 py-3 flex items-center justify-between">
+          <span class="text-xs text-sageDeep">🌷 Prediksi masa subur</span>
+          <span class="text-sm font-medium text-sageDeep" id="periodFertile">—</span>
+        </div>
+      </div>
+      <p class="text-[11px] text-charcoalSoft italic mt-3">Perkiraan berdasarkan rata-rata siklus, bisa berbeda dari siklus asli ya, sayang diri sendiri terus 🤍</p>
+    </div>
+
+  </div>
+
+</div>
+
+<!-- BOTTOM NAV (mobile) -->
+<div class="sm:hidden fixed bottom-0 left-0 right-0 bg-white/95 backdrop-blur border-t border-black/5 flex items-center safe-bottom pt-1.5 z-50 px-1">
+  <button data-tab="dashboard" class="bottom-tab-btn flex-1 min-w-0 flex flex-col items-center justify-center min-h-[52px] rounded-2xl text-[10px] font-medium transition">
+    <span class="text-lg leading-none mb-0.5">✨</span>Dashboard
+  </button>
+  <button data-tab="spiritual" class="bottom-tab-btn flex-1 min-w-0 flex flex-col items-center justify-center min-h-[52px] rounded-2xl text-[10px] font-medium transition">
+    <span class="text-lg leading-none mb-0.5">🕊️</span>Spiritual
+  </button>
+  <button data-tab="academic" class="bottom-tab-btn flex-1 min-w-0 flex flex-col items-center justify-center min-h-[52px] rounded-2xl text-[10px] font-medium transition">
+    <span class="text-lg leading-none mb-0.5">🎀</span>Academic
+  </button>
+  <button data-tab="finance" class="bottom-tab-btn flex-1 min-w-0 flex flex-col items-center justify-center min-h-[52px] rounded-2xl text-[10px] font-medium transition">
+    <span class="text-lg leading-none mb-0.5">💸</span>Finance
+  </button>
+  <button data-tab="tracker" class="bottom-tab-btn flex-1 min-w-0 flex flex-col items-center justify-center min-h-[52px] rounded-2xl text-[10px] font-medium transition">
+    <span class="text-lg leading-none mb-0.5">📊</span>Tracker
+  </button>
+</div>
+
+<script>
+const TAB_COLORS = {
+  dashboard: { bg:'bg-sage', text:'text-charcoal' },
+  spiritual: { bg:'bg-sage', text:'text-charcoal' },
+  academic: { bg:'bg-blush', text:'text-charcoal' },
+  finance: { bg:'bg-gold', text:'text-charcoal' },
+  tracker: { bg:'bg-blush', text:'text-charcoal' }
+};
+
+const QUOTES = [
+  "Sesungguhnya bersama kesulitan itu ada kemudahan — jangan berhenti di tengah jalan.",
+  "Amalan yang paling dicintai Allah adalah yang konsisten, walau sedikit.",
+  "Bertumbuh itu bukan soal cepat, tapi soal tidak pernah benar-benar berhenti.",
+  "Perbaiki niat, rapikan langkah, biar hasil jadi urusan Allah.",
+  "Waktu yang kamu pakai untuk fokus hari ini adalah investasi untuk dirimu lima tahun ke depan.",
+  "Rezeki sudah diatur, tapi ikhtiar dan hemat tetap bagian dari ibadah.",
+  "Setiap dzikir yang kamu ucapkan adalah jangkar yang menenangkan hati di tengah deadline.",
+  "Deep work adalah bentuk penghormatan pada waktu yang Allah titipkan padamu.",
+  "Kesalahan hari ini adalah bahan evaluasi, bukan alasan untuk berhenti berkembang.",
+  "Istiqomah kecil yang konsisten mengalahkan semangat besar yang naik turun."
+];
+
+const IBADAH_ITEMS = [
+  { id:'subuh', label:'Sholat Subuh' },
+  { id:'dzuhur', label:'Sholat Dzuhur' },
+  { id:'ashar', label:'Sholat Ashar' },
+  { id:'maghrib', label:'Sholat Maghrib' },
+  { id:'isya', label:'Sholat Isya' },
+  { id:'dhuha', label:'Dhuha / Tahajjud' },
+  { id:'dzikir', label:'Dzikir pagi/petang' }
+];
+
+let quickNotes = [];
+let todos = [];
+let transactions = [];
+let budgetCategories = [];
+let savingsGoal = { name:'', target:0, saved:0 };
+let activeTab = 'dashboard';
+const logsCache = {};
+
+function pad(n){ return n < 10 ? '0'+n : ''+n; }
+function toDateStr(d){ return d.getFullYear()+'-'+pad(d.getMonth()+1)+'-'+pad(d.getDate()); }
+function todayStr(){ return toDateStr(new Date()); }
+function rupiah(n){ return 'Rp ' + Math.round(n||0).toLocaleString('id-ID'); }
+function escapeHtml(s){ const d=document.createElement('div'); d.textContent=s||''; return d.innerHTML; }
+function getWeekStartStr(d){
+  const day = (d.getDay()+6)%7;
+  const monday = new Date(d);
+  monday.setDate(d.getDate()-day);
+  return toDateStr(monday);
+}
+
+async function storeGet(key){
+  try{ const v = localStorage.getItem(key); return v ? JSON.parse(v) : null; }
+  catch(e){ return null; }
+}
+async function storeSet(key, val){
+  try{ localStorage.setItem(key, JSON.stringify(val)); }
+  catch(e){ console.error('Gagal menyimpan data:', e); }
+}
+
+async function getLog(prefix, dateStr){
+  const cacheKey = prefix+':'+dateStr;
+  if(logsCache[cacheKey] !== undefined) return logsCache[cacheKey];
+  const v = await storeGet(cacheKey);
+  logsCache[cacheKey] = v;
+  return v;
+}
+async function setLog(prefix, dateStr, val){
+  logsCache[prefix+':'+dateStr] = val;
+  await storeSet(prefix+':'+dateStr, val);
+}
+
+/* ---------- tabs ---------- */
+function renderTabButtons(){
+  document.querySelectorAll('.tab-btn').forEach(btn => {
+    const t = btn.dataset.tab;
+    const active = t === activeTab;
+    btn.className = 'tab-btn px-4 py-2 rounded-full text-sm font-medium transition '
+      + (active ? TAB_COLORS[t].bg+' '+TAB_COLORS[t].text : 'text-charcoalSoft hover:bg-cream');
+  });
+  document.querySelectorAll('.bottom-tab-btn').forEach(btn => {
+    const t = btn.dataset.tab;
+    const active = t === activeTab;
+    btn.className = 'bottom-tab-btn flex flex-col items-center justify-center min-w-[64px] min-h-[52px] rounded-2xl text-xs font-medium transition '
+      + (active ? TAB_COLORS[t].text+' scale-105' : 'text-charcoalSoft/60');
+  });
+  document.querySelectorAll('.tab-panel').forEach(p => p.classList.add('hidden'));
+  document.getElementById('tab-'+activeTab).classList.remove('hidden');
+}
+async function switchTab(t){
+  activeTab = t;
+  renderTabButtons();
+  await storeSet('activeTab', activeTab);
+}
+document.querySelectorAll('.tab-btn, .bottom-tab-btn').forEach(btn => {
+  btn.addEventListener('click', () => switchTab(btn.dataset.tab));
+});
+
+/* ---------- date ---------- */
+function renderDate(){
+  const now = new Date();
+  const s = now.toLocaleDateString('id-ID', { weekday:'long', day:'numeric', month:'long', year:'numeric' });
+  document.getElementById('todayDate').textContent = s.charAt(0).toUpperCase()+s.slice(1);
+}
+
+/* ---------- quote ---------- */
+function showRandomQuote(){
+  const q = QUOTES[Math.floor(Math.random()*QUOTES.length)];
+  document.getElementById('quoteText').textContent = '"' + q + '"';
+}
+
+/* ---------- prayer times ---------- */
+let coords = { lat: -6.8, lng: 107.5 };
+function toRad(d){ return d*Math.PI/180; }
+function toDeg(r){ return r*180/Math.PI; }
+function sunDeclinationAndEqTime(date){
+  const start = new Date(date.getFullYear(),0,0);
+  const dayOfYear = Math.floor((date-start)/86400000);
+  const gamma = 2*Math.PI/365*(dayOfYear-1);
+  const eqTime = 229.18*(0.000075 + 0.001868*Math.cos(gamma) - 0.032077*Math.sin(gamma)
+    - 0.014615*Math.cos(2*gamma) - 0.040849*Math.sin(2*gamma));
+  const decl = 0.006918 - 0.399912*Math.cos(gamma) + 0.070257*Math.sin(gamma)
+    - 0.006758*Math.cos(2*gamma) + 0.000907*Math.sin(2*gamma)
+    - 0.002697*Math.cos(3*gamma) + 0.00148*Math.sin(3*gamma);
+  return { decl, eqTime };
+}
+function hourAngleHours(latRad, decRad, angleDeg){
+  const angleRad = toRad(angleDeg);
+  const cosH = (Math.sin(-angleRad) - Math.sin(latRad)*Math.sin(decRad)) / (Math.cos(latRad)*Math.cos(decRad));
+  const clamped = Math.max(-1, Math.min(1, cosH));
+  return toDeg(Math.acos(clamped))/15;
+}
+function computePrayerTimes(date, lat, lng){
+  const { decl, eqTime } = sunDeclinationAndEqTime(date);
+  const latRad = toRad(lat);
+  const timezone = -date.getTimezoneOffset()/60;
+  const solarNoon = 12 + timezone - lng/15 - eqTime/60;
+  const fajr = solarNoon - hourAngleHours(latRad, decl, 20);
+  const dhuhr = solarNoon + 2/60;
+  const altitudeAsr = Math.atan(1/(1+Math.tan(Math.abs(latRad-decl))));
+  const asr = solarNoon + hourAngleHours(latRad, decl, -toDeg(altitudeAsr));
+  const maghrib = solarNoon + hourAngleHours(latRad, decl, 0.833);
+  const isha = solarNoon + hourAngleHours(latRad, decl, 18);
+  return { Subuh: fajr, Dzuhur: dhuhr, Ashar: asr, Maghrib: maghrib, Isya: isha };
+}
+let prayerTimesToday = {};
+let prayerTimesTomorrowSubuh = null;
+let currentTrackedDate = null;
+
+function computeAndCacheAllPrayerTimes(){
+  const today = new Date();
+  const tomorrow = new Date(today);
+  tomorrow.setDate(tomorrow.getDate()+1);
+  prayerTimesToday = computePrayerTimes(today, coords.lat, coords.lng);
+  prayerTimesTomorrowSubuh = computePrayerTimes(tomorrow, coords.lat, coords.lng).Subuh;
+}
+
+async function handleDateRollover(){
+  const nowDateStr = todayStr();
+  if(currentTrackedDate === nowDateStr) return;
+  currentTrackedDate = nowDateStr;
+  computeAndCacheAllPrayerTimes();
+  renderDate();
+  await renderIbadah();
+  await renderTilawah();
+  renderTodos();
+  await renderDailyChart();
+  renderPeriod();
+}
+
+function updateCountdown(){
+  const now = new Date();
+  const nowH = now.getHours() + now.getMinutes()/60 + now.getSeconds()/3600;
+  const order = ['Subuh','Dzuhur','Ashar','Maghrib','Isya'];
+  let next = null, nextName = null;
+  for(const name of order){
+    if(prayerTimesToday[name] > nowH){ next = prayerTimesToday[name]; nextName = name; break; }
+  }
+  if(next === null){
+    // semua waktu sholat hari ini sudah lewat -> tampilkan Subuh besok (dihitung dari tanggal besok yang sesungguhnya, aman dari pergantian bulan/tahun)
+    next = 24 + (prayerTimesTomorrowSubuh !== null ? prayerTimesTomorrowSubuh : prayerTimesToday['Subuh']);
+    nextName = 'Subuh';
+  }
+  const totalSec = Math.max(0, Math.round((next-nowH)*3600));
+  const hh = Math.floor(totalSec/3600), mm = Math.floor((totalSec%3600)/60), ss = totalSec%60;
+  document.getElementById('nextPrayerLabel').textContent = nextName;
+  document.getElementById('nextPrayerCountdown').textContent = pad(hh)+':'+pad(mm)+':'+pad(ss);
+}
+
+/* ---------- ibadah + streak ---------- */
+async function renderIbadah(){
+  const today = todayStr();
+  const log = (await getLog('ibadah', today)) || [];
+  const listEl = document.getElementById('ibadahList');
+  listEl.innerHTML = IBADAH_ITEMS.map(item => {
+    const checked = log.includes(item.id);
+    return '<label class="flex items-center gap-3 rounded-2xl px-2 py-2.5 min-h-[44px] hover:bg-cream cursor-pointer">'
+      + '<input type="checkbox" data-id="'+item.id+'" class="ibadah-check w-5 h-5 rounded" '+(checked?'checked':'')+'>'
+      + '<span class="text-sm '+(checked ? 'text-charcoalSoft line-through' : 'text-charcoal')+'">'+item.label+'</span>'
+      + '</label>';
+  }).join('');
+
+  const dow = new Date().getDay();
+  const banner = document.getElementById('puasaSunnahBanner');
+  if(dow === 1 || dow === 4){
+    banner.classList.remove('hidden');
+    banner.classList.add('flex');
+    document.getElementById('puasaSunnahText').textContent = (dow===1?'Hari Senin':'Hari Kamis') + ' — jangan lupa puasa sunnah ya 🤍';
+    const done = await getLog('puasaSunnah', today);
+    document.getElementById('puasaSunnahCheck').checked = !!done;
+  } else {
+    banner.classList.add('hidden');
+    banner.classList.remove('flex');
+  }
+
+  await renderStreak();
+}
+async function renderStreak(){
+  let streak = 0;
+  let cursor = new Date();
+  const log0 = (await getLog('ibadah', todayStr())) || [];
+  const fullToday = log0.length === IBADAH_ITEMS.length;
+  if(!fullToday) cursor.setDate(cursor.getDate()-1);
+  for(let i=0;i<90;i++){
+    const ds = toDateStr(cursor);
+    const log = (await getLog('ibadah', ds)) || [];
+    if(log.length !== IBADAH_ITEMS.length) break;
+    streak++;
+    cursor.setDate(cursor.getDate()-1);
+  }
+  document.getElementById('ibadahStreak').textContent = streak+' hari';
+}
+document.getElementById('ibadahList').addEventListener('change', async (e) => {
+  if(!e.target.classList.contains('ibadah-check')) return;
+  const id = e.target.dataset.id;
+  const today = todayStr();
+  let log = (await getLog('ibadah', today)) || [];
+  if(e.target.checked) log = [...log, id];
+  else log = log.filter(x => x !== id);
+  await setLog('ibadah', today, log);
+  await renderIbadah();
+  await updateDailyProgressSnapshot();
+});
+document.getElementById('puasaSunnahCheck').addEventListener('change', async (e) => {
+  await setLog('puasaSunnah', todayStr(), e.target.checked);
+});
+
+/* ---------- tilawah ---------- */
+let tilawahTotal = 0;
+async function renderTilawah(){
+  const today = (await getLog('tilawah', todayStr())) || 0;
+  document.getElementById('tilawahToday').textContent = today;
+  document.getElementById('tilawahTotal').textContent = tilawahTotal;
+}
+document.getElementById('tilawahAdd').addEventListener('click', async () => {
+  const input = document.getElementById('tilawahInput');
+  const pages = parseInt(input.value);
+  if(!pages || pages <= 0) return;
+  const today = todayStr();
+  const current = (await getLog('tilawah', today)) || 0;
+  await setLog('tilawah', today, current + pages);
+  tilawahTotal += pages;
+  await storeSet('tilawahTotal', tilawahTotal);
+  input.value = '';
+  await renderTilawah();
+});
+
+/* ---------- pomodoro ---------- */
+let pomodoroSeconds = 25*60, pomodoroMode = 'focus', pomodoroTimer = null, pomodoroCount = 0;
+function renderPomodoro(){
+  const mm = Math.floor(pomodoroSeconds/60), ss = pomodoroSeconds%60;
+  document.getElementById('pomodoroClock').textContent = pad(mm)+':'+pad(ss);
+  document.getElementById('pomodoroMode').textContent = pomodoroMode === 'focus' ? '📖 Fokus' : '🌸 Istirahat';
+  document.getElementById('pomodoroCount').textContent = pomodoroCount;
+}
+document.getElementById('pomodoroStart').addEventListener('click', () => {
+  if(pomodoroTimer) return;
+  pomodoroTimer = setInterval(async () => {
+    pomodoroSeconds--;
+    if(pomodoroSeconds <= 0){
+      if(pomodoroMode === 'focus'){
+        pomodoroCount++;
+        await storeSet('pomodoroCount:'+todayStr(), pomodoroCount);
+        pomodoroMode = 'break'; pomodoroSeconds = 5*60;
+      } else { pomodoroMode = 'focus'; pomodoroSeconds = 25*60; }
+    }
+    renderPomodoro();
+  }, 1000);
+});
+document.getElementById('pomodoroPause').addEventListener('click', () => { clearInterval(pomodoroTimer); pomodoroTimer = null; });
+document.getElementById('pomodoroReset').addEventListener('click', () => {
+  clearInterval(pomodoroTimer); pomodoroTimer = null;
+  pomodoroMode = 'focus'; pomodoroSeconds = 25*60;
+  renderPomodoro();
+});
+
+/* ---------- quick notes ---------- */
+function renderNotes(){
+  const el = document.getElementById('noteList');
+  const colors = ['bg-sageLight note-a','bg-blushLight note-b','bg-goldLight note-c'];
+  if(quickNotes.length === 0){
+    el.innerHTML = '<p class="text-xs text-charcoalSoft italic">Belum ada catatan.</p>';
+    return;
+  }
+  el.innerHTML = quickNotes.map((n,i) =>
+    '<div class="'+colors[i%3]+' rounded-2xl shadow-soft px-3 py-2.5 text-xs text-charcoal max-w-[160px] flex items-start gap-1.5">'
+    + '<span class="flex-1 break-words">'+escapeHtml(n.text)+'</span>'
+    + '<button data-id="'+n.id+'" class="note-del text-charcoalSoft hover:text-blushDeep shrink-0">&times;</button>'
+    + '</div>'
+  ).join('');
+}
+document.getElementById('noteAdd').addEventListener('click', async () => {
+  const input = document.getElementById('noteInput');
+  const text = input.value.trim();
+  if(!text) return;
+  quickNotes.push({ id:'n'+Date.now(), text });
+  input.value = '';
+  await storeSet('quickNotes', quickNotes);
+  renderNotes();
+});
+document.getElementById('noteInput').addEventListener('keydown', e => { if(e.key==='Enter') document.getElementById('noteAdd').click(); });
+document.getElementById('noteList').addEventListener('click', async (e) => {
+  if(e.target.classList.contains('note-del')){
+    quickNotes = quickNotes.filter(n => n.id !== e.target.dataset.id);
+    await storeSet('quickNotes', quickNotes);
+    renderNotes();
+  }
+});
+
+/* ---------- IPK ---------- */
+async function renderIPK(){
+  const current = parseFloat(document.getElementById('currentIPK').value) || 0;
+  const target = parseFloat(document.getElementById('targetIPK').value) || 0;
+  const pct = target > 0 ? Math.min(100, Math.max(0,(current/target)*100)) : 0;
+  document.getElementById('ipkBar').style.width = pct+'%';
+  if(target > 0){
+    document.getElementById('ipkNote').textContent = current >= target
+      ? 'Target tercapai, pertahankan ya! 🎉'
+      : 'Butuh +' + (target-current).toFixed(2) + ' lagi menuju target.';
+  } else {
+    document.getElementById('ipkNote').textContent = 'Isi IPK saat ini dan target untuk melihat progres.';
+  }
+}
+document.getElementById('currentIPK').addEventListener('change', async (e) => {
+  await storeSet('currentIPK', e.target.value); renderIPK();
+});
+document.getElementById('targetIPK').addEventListener('change', async (e) => {
+  await storeSet('targetIPK', e.target.value); renderIPK();
+});
+
+/* ---------- skill quest ---------- */
+let skillWeekGoal = 10;
+async function renderSkill(){
+  const weekKey = getWeekStartStr(new Date());
+  const hours = (await getLog('skillWeek', weekKey)) || 0;
+  document.getElementById('weekHours').textContent = hours;
+  document.getElementById('weekGoal').textContent = skillWeekGoal;
+  document.getElementById('weekGoalInput').value = skillWeekGoal;
+  const pct = skillWeekGoal > 0 ? Math.min(100,(hours/skillWeekGoal)*100) : 0;
+  document.getElementById('skillBar').style.width = pct+'%';
+}
+document.getElementById('addHourBtn').addEventListener('click', async () => {
+  const weekKey = getWeekStartStr(new Date());
+  const hours = (await getLog('skillWeek', weekKey)) || 0;
+  await setLog('skillWeek', weekKey, hours+1);
+  renderSkill();
+});
+document.getElementById('weekGoalInput').addEventListener('change', async (e) => {
+  skillWeekGoal = parseInt(e.target.value) || 10;
+  await storeSet('skillWeekGoal', skillWeekGoal);
+  renderSkill();
+});
+
+/* ---------- todos with deadline countdown ---------- */
+function formatCountdown(dueStr){
+  const due = new Date(dueStr);
+  const diffMs = due - new Date();
+  if(diffMs <= 0) return { text:'Terlambat', overdue:true };
+  const totalMin = Math.floor(diffMs/60000);
+  const days = Math.floor(totalMin/1440);
+  const hours = Math.floor((totalMin%1440)/60);
+  const mins = totalMin%60;
+  let text = '';
+  if(days > 0) text = days+' hari '+hours+' jam lagi';
+  else if(hours > 0) text = hours+' jam '+mins+' menit lagi';
+  else text = mins+' menit lagi';
+  return { text, overdue:false };
+}
+function renderTodos(){
+  const el = document.getElementById('todoList');
+  if(todos.length === 0){
+    el.innerHTML = '<p class="text-xs text-charcoalSoft italic py-2">Belum ada tugas.</p>';
+    return;
+  }
+  const sorted = [...todos].sort((a,b) => {
+    if(a.done !== b.done) return a.done ? 1 : -1;
+    if(!a.due && !b.due) return 0;
+    if(!a.due) return 1;
+    if(!b.due) return -1;
+    return a.due.localeCompare(b.due);
+  });
+  el.innerHTML = sorted.map(t => {
+    const cd = t.due ? formatCountdown(t.due) : null;
+    return '<div class="flex items-start gap-3 rounded-2xl px-2 py-2.5 hover:bg-cream">'
+      + '<input type="checkbox" data-id="'+t.id+'" class="todo-check w-5 h-5 rounded mt-0.5" '+(t.done?'checked':'')+'>'
+      + '<div class="flex-1 min-w-0">'
+      + '<p class="text-sm '+(t.done?'text-charcoalSoft line-through':'text-charcoal')+' break-words">'+escapeHtml(t.text)+'</p>'
+      + (cd && !t.done ? '<p class="text-[11px] mono '+(cd.overdue?'text-blushDeep':'text-charcoalSoft')+'">'+cd.text+'</p>' : '')
+      + '</div>'
+      + '<button data-id="'+t.id+'" class="todo-del text-charcoalSoft hover:text-blushDeep text-base px-2 min-h-[44px]">&times;</button>'
+      + '</div>';
+  }).join('');
+}
+document.getElementById('todoAdd').addEventListener('click', async () => {
+  const input = document.getElementById('todoInput');
+  const dueInput = document.getElementById('todoDue');
+  const text = input.value.trim();
+  if(!text) return;
+  todos.push({ id:'td'+Date.now(), text, due: dueInput.value || null, done:false });
+  input.value = ''; dueInput.value = '';
+  await storeSet('academicTodos', todos);
+  renderTodos();
+});
+document.getElementById('todoList').addEventListener('click', async (e) => {
+  const btn = e.target.closest('button');
+  if(!btn) return;
+  if(btn.classList.contains('todo-del')){
+    todos = todos.filter(t => t.id !== btn.dataset.id);
+    await storeSet('academicTodos', todos);
+    renderTodos();
+  }
+});
+document.getElementById('todoList').addEventListener('change', async (e) => {
+  if(e.target.classList.contains('todo-check')){
+    todos = todos.map(t => t.id === e.target.dataset.id ? {...t, done:e.target.checked} : t);
+    await storeSet('academicTodos', todos);
+    renderTodos();
+    await updateDailyProgressSnapshot();
+  }
+});
+
+/* ---------- finance ---------- */
+function populateCategorySelect(){
+  const sel = document.getElementById('txCategory');
+  sel.innerHTML = budgetCategories.map(c => '<option value="'+c.id+'">'+escapeHtml(c.name)+'</option>').join('');
+}
+function renderBudgets(){
+  const el = document.getElementById('budgetList');
+  const now = new Date();
+  const ym = now.getFullYear()+'-'+pad(now.getMonth()+1);
+  el.innerHTML = budgetCategories.map(c => {
+    const spent = transactions.filter(t => t.type==='expense' && t.category===c.id && t.date.startsWith(ym)).reduce((a,t)=>a+t.amount,0);
+    const limit = c.limit || 0;
+    const pct = limit > 0 ? Math.min(100,(spent/limit)*100) : 0;
+    let barColor = 'bg-sage';
+    if(limit > 0 && spent > limit) barColor = 'bg-blushDeep';
+    else if(pct >= 70) barColor = 'bg-goldDeep';
+    return '<div>'
+      + '<div class="flex items-center justify-between mb-1">'
+      + '<span class="text-xs font-medium text-charcoal">'+escapeHtml(c.name)+'</span>'
+      + '<input type="number" data-id="'+c.id+'" class="budget-limit w-20 min-h-[32px] text-[11px] mono rounded-lg bg-cream px-2 text-right" placeholder="limit" value="'+(c.limit||'')+'">'
+      + '</div>'
+      + '<div class="w-full h-2.5 rounded-full bg-cream overflow-hidden">'
+      + '<div class="h-full '+barColor+' rounded-full transition-all" style="width:'+pct+'%"></div>'
+      + '</div>'
+      + '<p class="text-[11px] text-charcoalSoft mt-1">'+rupiah(spent)+' / '+(limit>0?rupiah(limit):'belum diatur')+'</p>'
+      + '</div>';
+  }).join('');
+}
+document.getElementById('budgetList').addEventListener('change', async (e) => {
+  if(e.target.classList.contains('budget-limit')){
+    const id = e.target.dataset.id;
+    budgetCategories = budgetCategories.map(c => c.id === id ? {...c, limit: parseFloat(e.target.value)||0} : c);
+    await storeSet('budgetCategories', budgetCategories);
+    renderBudgets();
+  }
+});
+function renderFinance(){
+  const income = transactions.filter(t=>t.type==='income').reduce((a,t)=>a+t.amount,0);
+  const expenseAll = transactions.filter(t=>t.type==='expense').reduce((a,t)=>a+t.amount,0);
+  const now = new Date();
+  const ym = now.getFullYear()+'-'+pad(now.getMonth()+1);
+  const expenseMonth = transactions.filter(t => t.type==='expense' && t.date.startsWith(ym)).reduce((a,t)=>a+t.amount,0);
+  document.getElementById('balanceOut').textContent = rupiah(income-expenseAll);
+  document.getElementById('incomeOut').textContent = rupiah(income);
+  document.getElementById('expenseOut').textContent = rupiah(expenseMonth);
+
+  const el = document.getElementById('txList');
+  if(transactions.length === 0){
+    el.innerHTML = '<p class="text-xs text-charcoalSoft italic py-2">Belum ada transaksi.</p>';
+  } else {
+    const sorted = [...transactions].sort((a,b) => b.date.localeCompare(a.date));
+    el.innerHTML = sorted.map(t => {
+      const cat = budgetCategories.find(c=>c.id===t.category);
+      return '<div class="flex items-center gap-2 rounded-xl px-2 py-2 hover:bg-cream">'
+      + '<span class="text-[11px] mono text-charcoalSoft w-14 shrink-0">'+t.date.slice(5)+'</span>'
+      + '<span class="flex-1 text-xs text-charcoal truncate">'+escapeHtml(t.desc||(cat?cat.name:''))+'</span>'
+      + '<span class="text-xs mono font-medium shrink-0 '+(t.type==='income'?'text-sageDeep':'text-blushDeep')+'">'+(t.type==='income'?'+':'-')+rupiah(t.amount).replace('Rp ','')+'</span>'
+      + '<button data-id="'+t.id+'" class="tx-del text-charcoalSoft hover:text-blushDeep text-sm px-1 min-h-[36px]">&times;</button>'
+      + '</div>';
+    }).join('');
+  }
+  renderBudgets();
+}
+document.getElementById('txAdd').addEventListener('click', async () => {
+  const type = document.getElementById('txType').value;
+  const category = document.getElementById('txCategory').value;
+  const amount = parseFloat(document.getElementById('txAmount').value);
+  const desc = document.getElementById('txDesc').value.trim();
+  if(!amount || amount <= 0) return;
+  transactions.push({ id:'tx'+Date.now(), type, category, amount, desc, date: todayStr() });
+  document.getElementById('txAmount').value = '';
+  document.getElementById('txDesc').value = '';
+  await storeSet('transactions', transactions);
+  renderFinance();
+});
+document.getElementById('txList').addEventListener('click', async (e) => {
+  if(e.target.classList.contains('tx-del')){
+    transactions = transactions.filter(t => t.id !== e.target.dataset.id);
+    await storeSet('transactions', transactions);
+    renderFinance();
+  }
+});
+
+/* ---------- savings goal ---------- */
+function renderGoal(){
+  document.getElementById('goalName').value = savingsGoal.name || '';
+  document.getElementById('goalTarget').value = savingsGoal.target || '';
+  const pct = savingsGoal.target > 0 ? Math.min(100,(savingsGoal.saved/savingsGoal.target)*100) : 0;
+  document.getElementById('goalBar').style.width = pct+'%';
+  document.getElementById('goalPercent').textContent = Math.round(pct)+'%';
+  document.getElementById('goalLabel').textContent = savingsGoal.name
+    ? savingsGoal.name+': '+rupiah(savingsGoal.saved)+' / '+rupiah(savingsGoal.target)
+    : 'Belum ada target';
+}
+document.getElementById('goalName').addEventListener('change', async (e) => {
+  savingsGoal.name = e.target.value.trim();
+  await storeSet('savingsGoal', savingsGoal);
+  renderGoal();
+});
+document.getElementById('goalTarget').addEventListener('change', async (e) => {
+  savingsGoal.target = parseFloat(e.target.value) || 0;
+  await storeSet('savingsGoal', savingsGoal);
+  renderGoal();
+});
+document.getElementById('goalAddBtn').addEventListener('click', async () => {
+  const input = document.getElementById('goalAddAmount');
+  const amount = parseFloat(input.value);
+  if(!amount || amount <= 0) return;
+  savingsGoal.saved = (savingsGoal.saved||0) + amount;
+  input.value = '';
+  await storeSet('savingsGoal', savingsGoal);
+  renderGoal();
+});
+
+/* ---------- daily progress snapshot & chart ---------- */
+let progressChart = null;
+async function updateDailyProgressSnapshot(){
+  const today = todayStr();
+  const log = (await getLog('ibadah', today)) || [];
+  const ibadahPct = IBADAH_ITEMS.length > 0 ? (log.length/IBADAH_ITEMS.length)*100 : 0;
+  let score;
+  if(todos.length > 0){
+    const donePct = (todos.filter(t=>t.done).length/todos.length)*100;
+    score = (ibadahPct + donePct)/2;
+  } else {
+    score = ibadahPct;
+  }
+  await setLog('dailyProgress', today, Math.round(score));
+  renderDailyChart();
+}
+async function renderDailyChart(){
+  const labels = [];
+  const data = [];
+  const dayNames = ['Min','Sen','Sel','Rab','Kam','Jum','Sab'];
+  const cursor = new Date();
+  cursor.setDate(cursor.getDate()-13);
+  for(let i=0;i<14;i++){
+    const ds = toDateStr(cursor);
+    const val = await getLog('dailyProgress', ds);
+    if(val !== null){
+      labels.push(dayNames[cursor.getDay()]+' '+cursor.getDate());
+      data.push(val);
+    }
+    cursor.setDate(cursor.getDate()+1);
+  }
+  if(labels.length === 0){
+    labels.push(dayNames[new Date().getDay()]+' '+new Date().getDate());
+    data.push(0);
+  }
+  const ctx = document.getElementById('progressChart').getContext('2d');
+  if(progressChart) progressChart.destroy();
+  progressChart = new Chart(ctx, {
+    type: 'line',
+    data: {
+      labels,
+      datasets: [{
+        label: 'Progress harian (%)',
+        data,
+        borderColor: '#C98A8F',
+        backgroundColor: 'rgba(201,138,143,0.12)',
+        tension: 0.35,
+        fill: true,
+        pointBackgroundColor: '#8FA888',
+        pointRadius: 4
+      }]
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      scales: {
+        y: { min:0, max:100, ticks:{ callback:v=>v+'%', color:'#726D6D', font:{size:10} }, grid:{ color:'#F3EEEE' } },
+        x: { ticks:{ color:'#726D6D', font:{size:10} }, grid:{ display:false } }
+      },
+      plugins: { legend: { display:false } }
+    }
+  });
+}
+
+/* ---------- period tracker ---------- */
+let periodData = { lastDate:'', cycleLength:28 };
+function renderPeriod(){
+  document.getElementById('periodLastDate').value = periodData.lastDate || '';
+  document.getElementById('periodCycleLength').value = periodData.cycleLength || 28;
+  const resultsEl = document.getElementById('periodResults');
+  if(!periodData.lastDate){
+    resultsEl.classList.add('hidden');
+    return;
+  }
+  resultsEl.classList.remove('hidden');
+  const last = new Date(periodData.lastDate+'T00:00:00');
+  const cycleLen = periodData.cycleLength || 28;
+  const next = new Date(last);
+  next.setDate(next.getDate()+cycleLen);
+  const ovulation = new Date(last);
+  ovulation.setDate(ovulation.getDate()+(cycleLen-14));
+  const fertileStart = new Date(ovulation); fertileStart.setDate(fertileStart.getDate()-5);
+  const fertileEnd = new Date(ovulation); fertileEnd.setDate(fertileEnd.getDate()+1);
+
+  const fmt = d => d.toLocaleDateString('id-ID', { day:'numeric', month:'long' });
+  document.getElementById('periodNextDate').textContent = fmt(next);
+  document.getElementById('periodFertile').textContent = fmt(fertileStart)+' – '+fmt(fertileEnd);
+
+  const now = new Date(); now.setHours(0,0,0,0);
+  const diffDays = Math.round((next-now)/86400000);
+  document.getElementById('periodCountdown').textContent = diffDays > 0 ? 'H-'+diffDays : (diffDays===0 ? 'Hari ini' : 'Terlambat '+Math.abs(diffDays)+' hari');
+}
+document.getElementById('periodLastDate').addEventListener('change', async (e) => {
+  periodData.lastDate = e.target.value;
+  await storeSet('periodData', periodData);
+  renderPeriod();
+});
+document.getElementById('periodCycleLength').addEventListener('change', async (e) => {
+  periodData.cycleLength = parseInt(e.target.value) || 28;
+  await storeSet('periodData', periodData);
+  renderPeriod();
+});
+
+/* ---------- reset daily ---------- */
+document.getElementById('resetDailyBtn').addEventListener('click', async () => {
+  const ok = confirm('Reset checklist ibadah dan tugas untuk hari baru? Streak dan data keuangan tidak akan terhapus.');
+  if(!ok) return;
+  const today = todayStr();
+  await setLog('ibadah', today, []);
+  todos = [];
+  await storeSet('academicTodos', todos);
+  await renderIbadah();
+  renderTodos();
+});
+
+/* ---------- init ---------- */
+(async function init(){
+  renderDate();
+  showRandomQuote();
+  document.getElementById('quoteRefresh').addEventListener('click', showRandomQuote);
+
+  activeTab = (await storeGet('activeTab')) || 'dashboard';
+  renderTabButtons();
+
+  quickNotes = (await storeGet('quickNotes')) || [];
+  todos = (await storeGet('academicTodos')) || [];
+  transactions = (await storeGet('transactions')) || [];
+  budgetCategories = (await storeGet('budgetCategories')) || [
+    { id:'c1', name:'Makan', limit:0 },
+    { id:'c2', name:'Transport', limit:0 },
+    { id:'c3', name:'Hiburan', limit:0 },
+    { id:'c4', name:'Lainnya', limit:0 }
+  ];
+  savingsGoal = (await storeGet('savingsGoal')) || { name:'', target:0, saved:0 };
+  tilawahTotal = (await storeGet('tilawahTotal')) || 0;
+  skillWeekGoal = (await storeGet('skillWeekGoal')) || 10;
+  pomodoroCount = (await storeGet('pomodoroCount:'+todayStr())) || 0;
+
+  periodData = (await storeGet('periodData')) || { lastDate:'', cycleLength:28 };
+  renderPeriod();
+  await renderDailyChart();
+
+  const savedCurrentIPK = await storeGet('currentIPK');
+  const savedTargetIPK = await storeGet('targetIPK');
+  if(savedCurrentIPK) document.getElementById('currentIPK').value = savedCurrentIPK;
+  if(savedTargetIPK) document.getElementById('targetIPK').value = savedTargetIPK;
+
+  populateCategorySelect();
+  renderNotes();
+  renderTodos();
+  renderFinance();
+  renderGoal();
+  renderIPK();
+  renderSkill();
+  renderPomodoro();
+  await renderIbadah();
+  await renderTilawah();
+  await updateDailyProgressSnapshot();
+
+  currentTrackedDate = todayStr();
+  computeAndCacheAllPrayerTimes();
+  updateCountdown();
+  setInterval(updateCountdown, 1000);
+  setInterval(handleDateRollover, 30000);
+  setInterval(renderTodos, 60000);
+
+  if(navigator.geolocation){
+    navigator.geolocation.getCurrentPosition((pos) => {
+      coords = { lat: pos.coords.latitude, lng: pos.coords.longitude };
+      computeAndCacheAllPrayerTimes();
+    }, () => {});
+  }
+})();
+</script>
+</body>
+</html>
